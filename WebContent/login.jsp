@@ -45,7 +45,7 @@
          3. 세션 생성(session.setAttribute)
          4. 로그인 실패 시 메시지 출력
     -->
-    <form action="loginProcess.jsp" method="post" class="space-y-4">
+    <form action="LoginServlet" method="post" class="space-y-4">
 
         <!-- 학번 -->
         <div>
