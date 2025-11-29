@@ -28,7 +28,8 @@
 <div class="px-4 py-6 space-y-6">
 
     <!-- 회원가입 폼 -->
-    <form action="registerProcess.jsp" method="post" class="space-y-5">
+    <form action="register" method="post" class="space-y-5">
+
 
         <!-- 학번 -->
         <div>

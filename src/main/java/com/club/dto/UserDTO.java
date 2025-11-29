@@ -3,6 +3,7 @@ package com.club.dto;
 public class UserDTO {
     private int user_id;
     private String name;
+    private String student_id;   // 학번
     private String email;
     private String pw_hash;
     private String role;
@@ -16,6 +17,9 @@ public class UserDTO {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getStudent_id() { return student_id; }
+    public void setStudent_id(String student_id) { this.student_id = student_id; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
