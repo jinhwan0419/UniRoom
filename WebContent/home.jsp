@@ -17,6 +17,10 @@
 </head>
 
 <body class="bg-gray-50 text-gray-900">
+<%
+    String cpath = request.getContextPath();
+    String today = java.time.LocalDate.now().toString();   // 오늘 날짜 (YYYY-MM-DD)
+%>
 
 <!-- Header -->
 <div class="bg-white px-4 py-3 border-b border-gray-100">
@@ -33,31 +37,39 @@
     <div class="space-y-2">
         <h2 class="text-sm font-medium text-gray-800 px-1">추천 공간</h2>
 
-        <div class="flex space-x-2 overflow-x-auto">
-            <!-- 반복문 자리 -->
-            <div class="min-w-[200px] bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                <div class="flex items-center space-x-2 mb-2">
-                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <i class="fa-solid fa-robot text-blue-600 text-sm"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="text-sm font-medium">로보틱스 동아리실</h3>
-                        <p class="text-xs text-gray-500">오늘 12시~14시 사용 가능</p>
-                    </div>
-                </div>
+       <div class="flex space-x-2 overflow-x-auto">
+    <!-- 반복문 자리 -->
+    <a href="<%=cpath%>/reservation?action=form&roomId=1&reserveDate=<%=today%>"
+       class="min-w-[200px] bg-white rounded-lg p-3 shadow-sm border border-gray-100 block">
+        <div class="flex items-center space-x-2 mb-2">
+            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-robot text-blue-600 text-sm"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-sm font-medium">로보틱스 동아리실</h3>
+                <p class="text-xs text-gray-500">오늘 12시~14시 사용 가능</p>
             </div>
         </div>
+    </a>
+</div>
+
     </div>
 
     <!-- 상단 탭 -->
-    <div class="bg-white rounded-lg p-1 shadow-sm border border-gray-100">
-        <div class="flex space-x-1">
-            <button class="flex-1 py-2 px-3 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">오늘</button>
-            <button class="flex-1 py-2 px-3 text-sm text-gray-600">주간</button>
-            <button class="flex-1 py-2 px-3 text-sm text-gray-600">내 예약</button>
-            <button class="flex-1 py-2 px-3 text-sm text-gray-600">동아리</button>
-        </div>
+   <div class="bg-white rounded-lg p-1 shadow-sm border border-gray-100">
+    <div class="flex space-x-1">
+        <button class="flex-1 py-2 px-3 text-sm font-medium text-blue-600 bg-blue-50 rounded-md">오늘</button>
+        <button class="flex-1 py-2 px-3 text-sm text-gray-600">주간</button>
+
+        <!-- 내 예약 탭: 리스트로 이동 -->
+        <a href="<%=cpath%>/reservation?action=list"
+           class="flex-1 py-2 px-3 text-sm text-gray-600 text-center rounded-md">
+            내 예약
+        </a>
+
+        <button class="flex-1 py-2 px-3 text-sm text-gray-600">동아리</button>
     </div>
+</div>
 
     <!-- 필터 -->
     <!-- TODO(DB):

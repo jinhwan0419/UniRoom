@@ -1,51 +1,64 @@
 package com.club.dto;
 
+import java.sql.Time;
+import java.sql.Date;
+
 public class ReservationDTO {
     private int id;
-    private int user_id;
-    private int timeslot_id;
+    private int memberId;
+    private int roomId;
+    private Date reserveDate;
+    private Time startTime;
+    private Time endTime;
     private String status;
-    private String created_at;
 
-    public ReservationDTO() {}
-
+    // Getter / Setter
     public int getId() {
         return id;
     }
-
     public void setId(int id) {
         this.id = id;
     }
 
-    public int getUser_id() {
-        return user_id;
+    public int getMemberId() {
+        return memberId;
+    }
+    public void setMemberId(int memberId) {
+        this.memberId = memberId;
     }
 
-    public void setUser_id(int user_id) {
-        this.user_id = user_id;
+    public int getRoomId() {
+        return roomId;
+    }
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
     }
 
-    public int getTimeslot_id() {
-        return timeslot_id;
+    public Date getReserveDate() {
+        return reserveDate;
+    }
+    public void setReserveDate(Date reserveDate) {
+        this.reserveDate = reserveDate;
     }
 
-    public void setTimeslot_id(int timeslot_id) {
-        this.timeslot_id = timeslot_id;
+    public Time getStartTime() {
+        return startTime;
+    }
+    public void setStartTime(Time startTime) {
+        this.startTime = startTime;
+    }
+
+    public Time getEndTime() {
+        return endTime;
+    }
+    public void setEndTime(Time endTime) {
+        this.endTime = endTime;
     }
 
     public String getStatus() {
         return status;
     }
-
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getCreated_at() {
-        return created_at;
-    }
-
-    public void setCreated_at(String created_at) {
-        this.created_at = created_at;
     }
 }

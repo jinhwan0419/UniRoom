@@ -33,12 +33,16 @@
 <!-- 컨테이너 -->
 <div class="px-4 py-4 space-y-4">
 
-    <!-- ▣ DB 작업 구간 -->
-    <!-- TODO(백엔드/DB):
-        1. room_id 파라미터로 해당 공간 정보 조회
-        2. 동아리실 이름, 수용인원, 비품, 이미지 URL을 DB에서 로드
-        3. 예약 가능 시간대 목록도 DB에서 로드
-    -->
+   <!-- ▣ 예약 폼 (백엔드 연결용) -->
+    <form action="${pageContext.request.contextPath}/reservation" method="post">
+        <input type="hidden" name="action" value="insert">
+        <!-- 이전 페이지에서 room_id, 날짜를 넘겨준다고 가정 -->
+        <input type="hidden" name="roomId" value="${param.roomId}">
+        <input type="hidden" name="reserveDate" value="${param.reserveDate}">
+        
+        <!-- 지금은 11:00~12:00 고정 (파란 버튼과 동일) -->
+        <input type="hidden" name="startTime" value="11:00">
+        <input type="hidden" name="endTime" value="12:00">
 
     <!-- 동아리실 이미지 -->
     <div class="h-48 bg-gray-200 rounded-xl overflow-hidden">
@@ -116,6 +120,8 @@
         선택한 시간으로 예약하기
     </button>
 
+	</form> <!-- ▣ 예약 폼 끝 -->
+	
 </div>
 
 <div class="pb-10"></div>
