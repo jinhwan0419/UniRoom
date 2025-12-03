@@ -47,6 +47,14 @@
     -->
     <form action="LoginServlet" method="post" class="space-y-4">
 
+		<!-- 회원가입으로 이동 -->
+		<div class="text-center mt-4">
+   			 <a href="register.jsp"
+      	 class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+        회원가입 하기 →
+    		</a>
+		</div>
+		
         <!-- 학번 -->
         <div>
             <label class="block text-gray-700 text-sm font-medium mb-2">학번</label>

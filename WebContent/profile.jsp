@@ -1,4 +1,32 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="com.club.dto.UserDTO" %>
+<%
+    // -----------------------------
+    // 로그인 체크 + 유저 정보 가져오기
+    // -----------------------------
+    HttpSession sessionObj = request.getSession(false);
+    if (sessionObj == null || sessionObj.getAttribute("loginUser") == null) {
+        // 로그인 안 되어 있으면 로그인 페이지로
+        response.sendRedirect("login.jsp");
+        return;
+    }
+
+    // 세션에 저장된 로그인 사용자 정보
+    UserDTO loginUser = (UserDTO) sessionObj.getAttribute("loginUser");
+
+    // 마이페이지 서블릿에서 넘긴 패널티/제한 정보 (없으면 null일 수 있음)
+    Integer penaltyPoint = (Integer) request.getAttribute("penaltyPoint");
+    Integer penaltyLimit = (Integer) request.getAttribute("penaltyLimit");
+    Boolean isBlocked    = (Boolean) request.getAttribute("isBlocked");
+
+    if (penaltyPoint == null) penaltyPoint = 0;
+    if (penaltyLimit == null) penaltyLimit = 0;
+    if (isBlocked == null)    isBlocked = false;
+
+    // TODO: 동아리 이름, 프로필 이미지 경로는 필요 시 request.setAttribute(...)로 받아서 사용
+    String clubName = (String) request.getAttribute("clubName");
+    if (clubName == null) clubName = "소속 동아리 미지정";
+%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -29,29 +57,43 @@
 
 <div class="px-4 py-6">
 
-    <!-- TODO(DB):
-        1. session에서 로그인된 user_id 가져오기
-        2. users 테이블에서 사용자 정보 조회
-        3. 동아리 소속 정보 JOIN해서 가져오기
-        4. 프로필 사진 경로 로드
-    -->
-
-    <!-- 프로필 이미지 -->
+    <!-- 프로필 이미지 & 기본 정보 -->
     <div class="text-center mb-6">
         <div class="w-24 h-24 mx-auto mb-3">
+            <!-- TODO: 프로필 이미지 경로를 DB에서 가져오면 src를 동적으로 변경 -->
             <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg"
                  alt="Profile"
                  class="w-full h-full rounded-full object-cover">
         </div>
 
-        <h2 class="text-lg font-semibold text-gray-900">김동아</h2>
-        <p class="text-sm text-gray-600">로보틱스 동아리</p>
+        <!-- 로그인한 사용자 이름 -->
+        <h2 class="text-lg font-semibold text-gray-900"><%= loginUser.getName() %></h2>
+
+        <!-- 동아리 이름 (없으면 기본 문구) -->
+        <p class="text-sm text-gray-600"><%= clubName %></p>
+
+        <!-- 패널티 / 예약 제한 안내 (있을 때만 표시) -->
+        <div class="mt-3 text-sm">
+            <span class="inline-block px-3 py-1 rounded-full 
+                          <%= isBlocked ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600" %>">
+                패널티: <%= penaltyPoint %>점
+                <% if (penaltyLimit > 0) { %>
+                    / 기준: <%= penaltyLimit %>점
+                <% } %>
+                <% if (isBlocked) { %>
+                    · 현재 예약 제한 상태
+                <% } else { %>
+                    · 예약 가능
+                <% } %>
+            </span>
+        </div>
     </div>
 
     <!-- 메뉴 카드 -->
     <div class="space-y-4">
 
         <!-- 예약 내역 -->
+        <!-- TODO: myReservations.jsp 대신 /myReservations 서블릿 등을 사용해도 됨 -->
         <a href="myReservations.jsp" class="block bg-white rounded-xl p-4 border border-gray-100">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -107,16 +149,17 @@
         </a>
 
         <!-- 로그아웃 -->
-        <!-- TODO(DB): session.invalidate() 후 login.jsp로 redirect -->
-        <a href="logout.jsp" class="block bg-white rounded-xl p-4 border border-gray-100">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <i class="fa-solid fa-sign-out-alt text-red-600"></i>
-                    <span class="text-red-600">로그아웃</span>
-                </div>
-                <i class="fa-solid fa-chevron-right text-gray-400"></i>
-            </div>
-        </a>
+	<a href="<%= request.getContextPath() %>/LoginServlet" 
+   		class="block bg-white rounded-xl p-4 border border-gray-100">
+   		 <div class="flex items-center justify-between">
+        	<div class="flex items-center space-x-3">
+            	<i class="fa-solid fa-sign-out-alt text-red-600"></i>
+            	<span class="text-red-600">로그아웃</span>
+        	</div>
+        	<i class="fa-solid fa-chevron-right text-gray-400"></i>
+    	</div>
+	</a>
+
 
     </div>
 

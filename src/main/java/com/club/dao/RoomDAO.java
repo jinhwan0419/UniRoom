@@ -110,8 +110,7 @@ public class RoomDAO {
     /**
      * 4. 인기 방 Top N
      *    - reservations 테이블의 예약 횟수 기준으로 정렬
-     *    - 지금 화면에서는 "추천 공간" 같은 곳에 쓸 수 있음
-     *    - 동아리당 방이 하나여도, 단순히 "예약이 많이 된 방 순서"라서 써도 됨
+     *    - "추천 공간" 같은 곳에 쓸 수 있음
      */
     public List<RoomDTO> findPopularRooms(int limit) {
         List<RoomDTO> list = new ArrayList<>();
@@ -138,7 +137,7 @@ public class RoomDAO {
                 while (rs.next()) {
                     RoomDTO room = mapRoom(rs);
                     // 필요하면 여기서 reservation_count를 DTO에 넣을 수도 있음
-                    // 예: room.setReservation_count(rs.getInt("reservation_count"));
+                    // room.setReservation_count(rs.getInt("reservation_count"));
                     list.add(room);
                 }
             }

@@ -9,6 +9,8 @@ public class UserDTO {
     private String role;
     private int is_active;
     private String created_at;
+    private int penalty_point;
+
 
     public UserDTO() {}
 
@@ -35,4 +37,8 @@ public class UserDTO {
 
     public String getCreated_at() { return created_at; }
     public void setCreated_at(String created_at) { this.created_at = created_at; }
+    
+    public int getPenalty_point() { return penalty_point; }
+    public void setPenalty_point(int penalty_point) { this.penalty_point = penalty_point; }
+
 }
