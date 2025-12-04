@@ -10,6 +10,9 @@ public class UserDTO {
     private int is_active;
     private String created_at;
 
+    // users 테이블의 club_id 컬럼과 연결
+    private int clubId;
+
     public UserDTO() {}
 
     public int getUser_id() { return user_id; }
@@ -35,4 +38,7 @@ public class UserDTO {
 
     public String getCreated_at() { return created_at; }
     public void setCreated_at(String created_at) { this.created_at = created_at; }
+
+    public int getClubId() { return clubId; }
+    public void setClubId(int clubId) { this.clubId = clubId; }
 }

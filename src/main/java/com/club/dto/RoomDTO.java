@@ -1,69 +1,29 @@
 package com.club.dto;
 
 public class RoomDTO {
-    private int room_id;
-    private int club_id;
-    private String name;
-    private String open_time;
-    private String close_time;
-    private String note;
-    private String created_at;
+
+    private int room_id;      // rooms PK
+    private String room_name;
+    private int capacity;
+    private String location;
+
+    // rooms 테이블의 club_id 컬럼과 연결
+    private int clubId;
 
     public RoomDTO() {}
 
-    public int getRoom_id() {
-        return room_id;
-    }
+    public int getRoom_id() { return room_id; }
+    public void setRoom_id(int room_id) { this.room_id = room_id; }
 
-    public void setRoom_id(int room_id) {
-        this.room_id = room_id;
-    }
+    public String getRoom_name() { return room_name; }
+    public void setRoom_name(String room_name) { this.room_name = room_name; }
 
-    public int getClub_id() {
-        return club_id;
-    }
+    public int getCapacity() { return capacity; }
+    public void setCapacity(int capacity) { this.capacity = capacity; }
 
-    public void setClub_id(int club_id) {
-        this.club_id = club_id;
-    }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getOpen_time() {
-        return open_time;
-    }
-
-    public void setOpen_time(String open_time) {
-        this.open_time = open_time;
-    }
-
-    public String getClose_time() {
-        return close_time;
-    }
-
-    public void setClose_time(String close_time) {
-        this.close_time = close_time;
-    }
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
-    }
-
-    public String getCreated_at() {
-        return created_at;
-    }
-
-    public void setCreated_at(String created_at) {
-        this.created_at = created_at;
-    }
+    public int getClubId() { return clubId; }
+    public void setClubId(int clubId) { this.clubId = clubId; }
 }

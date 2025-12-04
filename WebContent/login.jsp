@@ -1,4 +1,8 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%> 
+<%
+    String cpath = request.getContextPath();
+    String errorMsg = (String) request.getAttribute("errorMsg");
+%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -38,15 +42,15 @@
         <p class="text-gray-600 text-sm">동아리실 예약이 이제 더 쉬워졌습니다</p>
     </div>
 
-    <!-- 로그인 폼 -->
-    <!-- TODO(백엔드/DB):
-         1. loginProcess.jsp 또는 LoginServlet으로 POST 방식 처리
-         2. users 테이블에서 studentId / password 검증
-         3. 세션 생성(session.setAttribute)
-         4. 로그인 실패 시 메시지 출력
-    -->
-    <form action="LoginServlet" method="post" class="space-y-4">
+    <%-- 🔴 로그인 실패 메시지 (없으면 안 보임) --%>
+    <% if (errorMsg != null) { %>
+        <div class="mb-2 text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+            <i class="fa-solid fa-circle-exclamation mr-1"></i> <%=errorMsg%>
+        </div>
+    <% } %>
 
+    <!-- 로그인 폼 -->
+    <form action="<%=cpath%>/LoginServlet" method="post" class="space-y-4">
         <!-- 학번 -->
         <div>
             <label class="block text-gray-700 text-sm font-medium mb-2">학번</label>
@@ -62,19 +66,13 @@
         </div>
 
         <!-- 로그인 버튼 -->
-        <!-- TODO(DB):
-             로그인 성공 시 → home.jsp로 redirect
-             실패 시 → login.jsp로 되돌리기
-        -->
         <button type="submit"
                 class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700">
             로그인
         </button>
-
     </form>
 
     <!-- Social Login (UI용) -->
-    <!-- TODO(DB): 나중에 필요하면 OAuth 연동 가능 / 현재는 UI만 -->
     <div class="space-y-3 mt-6">
         <div class="relative">
             <div class="absolute inset-0 flex items-center">

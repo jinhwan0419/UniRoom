@@ -1,5 +1,13 @@
 package com.club.dto;
 
+/**
+ * 동아리 정보를 담는 DTO
+ * - clubs 테이블과 1:1 매핑
+ *   club_id    : PK
+ *   name       : 동아리 이름
+ *   is_active  : 활성 여부 (1=활성, 0=비활성)
+ *   created_at : 생성 시각 (문자열로만 보관)
+ */
 public class ClubDTO {
     private int club_id;
     private String name;

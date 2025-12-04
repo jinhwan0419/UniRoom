@@ -1,4 +1,32 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.util.List" %>
+<%@ page import="com.club.dto.RoomDTO" %>
+<%@ page import="com.club.dto.UserDTO" %>
+
+<%
+    String cpath = request.getContextPath();
+
+    // 로그인 유저 (HomeServlet에서 이미 체크했지만 JSP에서도 꺼내서 사용)
+    UserDTO loginUser = (UserDTO) session.getAttribute("loginUser");
+    int userClubId = (loginUser != null) ? loginUser.getClubId() : 0;
+
+    // HomeServlet에서 넘겨준 값들
+    String reserveDate = (String) request.getAttribute("reserveDate");
+    String startTime   = (String) request.getAttribute("startTime");
+    Integer clubIdObj  = (Integer) request.getAttribute("clubId");
+    int clubId = (clubIdObj != null) ? clubIdObj : userClubId;
+
+    if (reserveDate == null || reserveDate.trim().isEmpty()) {
+        reserveDate = java.time.LocalDate.now().toString();
+    }
+    if (startTime == null) {
+        startTime = "";
+    }
+
+    List<RoomDTO> popularRooms = (List<RoomDTO>) request.getAttribute("popularRooms");
+    List<RoomDTO> allRooms     = (List<RoomDTO>) request.getAttribute("allRooms");
+%>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -36,28 +64,21 @@
 </header>
 
 <main class="px-3 py-3 pb-24 space-y-3">
-    <!-- 상단 탭 : 오늘 / 주간 / 내 예약 / 동아리 -->
+    <!-- 상단 탭 -->
     <section class="bg-white rounded-lg p-1 shadow-sm border border-gray-100">
         <div class="flex space-x-1 text-sm">
-            <!-- 오늘 (현재 화면) -->
-            <a href="home.jsp"
+            <a href="<%=cpath%>/home"
                class="flex-1 text-center py-2 px-3 font-medium text-blue-600 bg-blue-50 rounded-md">
                 오늘
             </a>
-
-            <!-- 주간 : 아직 기능 없음 → 비활성/준비중 표시 -->
             <button type="button"
                     class="flex-1 text-center py-2 px-3 text-gray-400 bg-gray-50 rounded-md cursor-not-allowed">
                 주간(준비 중)
             </button>
-
-            <!-- 내 예약으로 이동 -->
             <a href="myReservations.jsp"
                class="flex-1 text-center py-2 px-3 text-gray-600 rounded-md">
                 내 예약
             </a>
-
-            <!-- 동아리 목록(추후 DB연동) -->
             <a href="clubs.jsp"
                class="flex-1 text-center py-2 px-3 text-gray-600 rounded-md">
                 동아리
@@ -65,12 +86,11 @@
         </div>
     </section>
 
-    <!-- 추천 공간 캐러셀 -->
+    <!-- 추천 공간 : UI는 그대로 두고, 여기서는 단순 안내용만 사용 -->
     <section class="space-y-2">
         <h2 class="text-sm font-medium text-gray-800 px-1">추천 공간</h2>
         <div class="flex space-x-2 overflow-x-auto">
-            <!-- TODO(DB): 실제 추천 로직과 이미지/텍스트를 DB에서 가져오기 -->
-            <a href="reservation.jsp" class="min-w-[200px] bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+            <a class="min-w-[200px] bg-white rounded-lg p-3 shadow-sm border border-gray-100">
                 <div class="flex items-center space-x-2 mb-2">
                     <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                         <i class="fa-solid fa-robot text-blue-600 text-sm"></i>
@@ -82,7 +102,7 @@
                 </div>
             </a>
 
-            <a href="reservation.jsp" class="min-w-[200px] bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+            <a class="min-w-[200px] bg-white rounded-lg p-3 shadow-sm border border-gray-100">
                 <div class="flex items-center space-x-2 mb-2">
                     <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                         <i class="fa-solid fa-music text-purple-600 text-sm"></i>
@@ -96,106 +116,111 @@
         </div>
     </section>
 
-    <!-- 필터 -->
-    <section class="flex space-x-2">
-        <!-- TODO(DB): 실제 날짜/동아리/시간 필터와 연동 -->
-        <select class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm">
-            <option>날짜 선택</option>
-        </select>
-        <select class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm">
-            <option>동아리 선택</option>
-        </select>
-        <select class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm">
-            <option>시간</option>
-        </select>
+    <!-- ✅ 필터 : 이건 "예약 정보" 입력 역할도 같이 함 -->
+    <section>
+        <form action="<%=cpath%>/home" method="get" class="flex space-x-2">
+            <!-- 날짜 -->
+            <input type="date"
+                   name="reserveDate"
+                   value="<%=reserveDate%>"
+                   class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+
+            <!-- 동아리 선택 : 내 동아리로 고정 (disable + hidden) -->
+            <select class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" disabled>
+                <option>
+                    <% if (userClubId == 1) { %>로보틱스 동아리<% }
+                       else if (userClubId == 2) { %>밴드 동아리<% }
+                       else if (userClubId == 3) { %>회의 동아리<% }
+                       else { %>동아리 선택<% } %>
+                </option>
+            </select>
+            <input type="hidden" name="clubId" value="<%=userClubId%>" />
+
+            <!-- 시작 시간 -->
+            <input type="time"
+                   name="startTime"
+                   value="<%=startTime%>"
+                   class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+
+            <button type="submit"
+                    class="bg-blue-600 text-white text-sm px-4 rounded-full whitespace-nowrap">
+                필터 적용
+            </button>
+        </form>
     </section>
 
-    <!-- 인기 예약 현황 -->
+    <!-- ✅ 인기 예약 현황 : 여기서 바로 "내 동아리 방" 예약 -->
     <section class="space-y-2">
         <h2 class="text-sm font-medium text-gray-800 px-1">인기 예약 현황</h2>
         <div class="space-y-1">
-            <!-- 카드 1 -->
-            <a href="reservation.jsp" class="block bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-robot text-blue-600 text-sm"></i>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-sm font-medium">로보틱스실</h3>
-                            <p class="text-xs text-green-600">사용 가능</p>
-                            <p class="text-xs text-gray-500">이번 주 42회 사용</p>
-                        </div>
-                    </div>
-                    <button class="w-6 h-6 text-gray-400">
-                        <i class="fa-regular fa-star text-sm"></i>
-                    </button>
-                </div>
-            </a>
+            <%
+                if (allRooms != null && !allRooms.isEmpty()) {
+                    // 내 동아리 방 리스트 (보통 1개일 것)
+                    for (RoomDTO room : allRooms) {
+            %>
+                <!-- 한 줄마다 ReservationServlet으로 바로 POST하는 폼 -->
+                <form action="<%=cpath%>/ReservationServlet" method="post"
+                      class="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                    <input type="hidden" name="roomId"      value="<%=room.getRoom_id()%>" />
+                    <input type="hidden" name="reserveDate" value="<%=reserveDate%>" />
+                    <input type="hidden" name="startTime"   value="<%=startTime%>" />
+                    <!-- 끝 시간은 여기선 1시간 후로 쓰고 싶으면 나중에 서버에서 계산하거나,
+                         예약폼을 한 번 더 보여주고 싶으면 endTime도 화면에 따로 input으로 만들어줘. -->
+                    <input type="hidden" name="endTime"     value="<%=startTime%>" />
 
-            <!-- 카드 2 -->
-            <a href="reservation.jsp" class="block bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-music text-purple-600 text-sm"></i>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-robot text-blue-600 text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-sm font-medium"><%=room.getRoom_name()%></h3>
+                                <p class="text-xs text-green-600">내 동아리 방</p>
+                                <p class="text-xs text-gray-500">
+                                    선택한 날짜: <%=reserveDate%>
+                                    <% if (startTime != null && !startTime.isEmpty()) { %>
+                                        · 시작 <%=startTime%>
+                                    <% } %>
+                                </p>
+                            </div>
                         </div>
-                        <div class="flex-1">
-                            <h3 class="text-sm font-medium">밴드 연습실</h3>
-                            <p class="text-xs text-red-500">예약됨</p>
-                            <p class="text-xs text-gray-500">이번 주 28회 사용</p>
-                        </div>
-                    </div>
-                    <button class="w-6 h-6 text-gray-400">
-                        <i class="fa-regular fa-star text-sm"></i>
-                    </button>
-                </div>
-            </a>
 
-            <!-- 카드 3 -->
-            <a href="reservation.jsp" class="block bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-users text-green-600 text-sm"></i>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-sm font-medium">회의실 A</h3>
-                            <p class="text-xs text-yellow-600">이용 중</p>
-                            <p class="text-xs text-gray-500">이번 주 35회 사용</p>
-                        </div>
+                        <!-- 🔵 여기 버튼 = 바로 예약하기 -->
+                        <button type="submit"
+                                class="px-3 py-1.5 text-xs rounded-full bg-blue-600 text-white font-medium">
+                            예약하기
+                        </button>
                     </div>
-                    <button class="w-6 h-6 text-gray-400">
-                        <i class="fa-solid fa-star text-yellow-400 text-sm"></i>
-                    </button>
+                </form>
+            <%
+                    }
+                } else {
+            %>
+                <div class="text-xs text-gray-400 px-1">
+                    아직 내 동아리 방 정보가 없습니다.
                 </div>
-            </a>
+            <%
+                }
+            %>
         </div>
     </section>
 </main>
 
-<!-- 하단 네비게이션 : 홈 활성 -->
+<!-- 하단 네비게이션 -->
 <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
     <div class="flex justify-around">
-        <!-- 홈 (활성) -->
-        <a href="home.jsp" class="flex flex-col items-center space-y-1">
+        <a href="<%=cpath%>/home" class="flex flex-col items-center space-y-1">
             <i class="fa-solid fa-house text-blue-600 text-lg"></i>
             <span class="text-xs text-blue-600 font-medium">홈</span>
         </a>
-
-        <!-- 내 예약 -->
         <a href="myReservations.jsp" class="flex flex-col items-center space-y-1">
             <i class="fa-regular fa-calendar text-gray-400 text-lg"></i>
             <span class="text-xs text-gray-400">내 예약</span>
         </a>
-
-        <!-- 알림 -->
         <a href="notifications.jsp" class="flex flex-col items-center space-y-1">
             <i class="fa-regular fa-bell text-gray-400 text-lg"></i>
             <span class="text-xs text-gray-400">알림</span>
         </a>
-
-        <!-- 프로필 -->
         <a href="profile.jsp" class="flex flex-col items-center space-y-1">
             <i class="fa-regular fa-user text-gray-400 text-lg"></i>
             <span class="text-xs text-gray-400">프로필</span>

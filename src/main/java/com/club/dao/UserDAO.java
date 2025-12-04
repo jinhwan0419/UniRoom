@@ -116,4 +116,39 @@ public class UserDAO {
 
         return exists;
     }
+    public UserDTO loginByStudentId(String studentId, String password) {
+        UserDTO user = null;
+
+        String sql = "SELECT * FROM users WHERE student_id = ? AND pw_hash = ?"; 
+        // ⚠️ 비밀번호 컬럼명이 다르면 pw_hash 대신 실제 컬럼명으로 바꿔야 함.
+        //     비밀번호를 해시 안 쓰고 plain text로 저장했다면 그대로 비교됨.
+
+        try (
+            Connection conn = DBUtil.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+        ) {
+            pstmt.setString(1, studentId);
+            pstmt.setString(2, password);   // 나중에 해시 쓰면 여기서 변환
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    user = new UserDTO();
+                    user.setUser_id(rs.getInt("user_id"));
+                    user.setName(rs.getString("name"));
+                    user.setStudent_id(rs.getString("student_id"));
+                    user.setEmail(rs.getString("email"));
+                    user.setPw_hash(rs.getString("pw_hash"));
+                    user.setRole(rs.getString("role"));
+                    user.setIs_active(rs.getInt("is_active"));
+                    user.setCreated_at(rs.getString("created_at"));
+                    user.setClubId(rs.getInt("club_id"));   // 🔵 동아리 ID 까지 세팅
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return user;
+    }
+
 }

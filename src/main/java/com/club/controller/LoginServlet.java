@@ -12,12 +12,7 @@ import javax.servlet.http.HttpSession;
 import com.club.dao.UserDAO;
 import com.club.dto.UserDTO;
 
-/**
- * 로그인 처리용 서블릿
- * - GET  : 로그인 페이지로 이동
- * - POST : 로그인 폼 처리 (UserDAO 사용)
- */
-@WebServlet("/LoginServlet")   // login.jsp에서 action="LoginServlet" 이면 OK
+@WebServlet("/LoginServlet")
 public class LoginServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -25,50 +20,52 @@ public class LoginServlet extends HttpServlet {
         super();
     }
 
-    // GET: 그냥 로그인 페이지로
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        response.sendRedirect("login.jsp");
+        // 단순히 로그인 페이지로 포워딩
+        request.getRequestDispatcher("/login.jsp").forward(request, response);
     }
 
-    // POST: 로그인 처리
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
+        String cpath = request.getContextPath();
 
-        // 1. 폼에서 값 읽기
         String studentId = request.getParameter("studentId");
-        String password  = request.getParameter("password");
+        String pw        = request.getParameter("password");
 
-        // 2. 비밀번호 해시 (지금은 그냥 평문 사용)
-        String pwHash = password;
+        // 1. 빈값 체크
+        if (studentId == null || studentId.trim().isEmpty()
+         || pw        == null || pw.trim().isEmpty()) {
 
-        // 3. DB에서 사용자 조회
-        UserDAO userDAO = new UserDAO();
-        UserDTO user = userDAO.login(studentId, pwHash);
-
-        // 4. 로그인 성공 / 실패 분기
-        if (user != null) {
-            // 성공
-            HttpSession session = request.getSession(true);
-
-            // 기본 정보 세션에 저장
-            session.setAttribute("loginId", user.getStudent_id());  // 학번
-            session.setAttribute("loginName", user.getName());      // 이름
-            session.setAttribute("role", user.getRole());           // 권한 (STUDENT / CLUB_LEADER / UNION_ADMIN)
-            session.setAttribute("userId", user.getUser_id());      // PK (필요할 때 사용)
-
-            // 홈으로 이동
-            response.sendRedirect("home");
-        } else {
-            // 실패
-            request.setAttribute("error", "학번 또는 비밀번호가 올바르지 않습니다.");
-            request.setAttribute("studentId", studentId); // 입력했던 학번 다시 보여주기
-            request.getRequestDispatcher("login.jsp").forward(request, response);
+            request.setAttribute("errorMsg", "학번과 비밀번호를 입력해 주세요.");
+            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            return;
         }
+
+        // 2. DB에서 사용자 조회 (학번 + 비밀번호)
+        UserDAO userDAO = new UserDAO();
+        UserDTO user = userDAO.loginByStudentId(studentId, pw);  // 🔵 아래에서 구현할 메서드
+
+        if (user == null) {
+            // 로그인 실패
+            request.setAttribute("errorMsg", "학번 또는 비밀번호가 올바르지 않습니다.");
+            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            return;
+        }
+
+        // 3. 로그인 성공 → 세션에 저장
+        HttpSession session = request.getSession();
+        session.setAttribute("loginUser", user);   // 🔵 HomeServlet이 이 이름으로 꺼냄
+
+        System.out.println("[LoginServlet] 로그인 성공: "
+                           + user.getStudent_id() + ", clubId=" + user.getClubId());
+
+        // 4. 홈으로 이동
+        response.sendRedirect(cpath + "/home");
     }
 }
