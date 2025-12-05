@@ -9,62 +9,61 @@ import java.util.List;
 import com.club.dto.RoomDTO;
 import com.club.util.DBUtil;
 
+/**
+ * rooms 테이블 접근 DAO
+ * - 방 기본 정보 조회
+ * - 동아리별 방 목록 조회
+ * - 인기(추천) 방 목록 조회
+ */
 public class RoomDAO {
 
-    // 공통 매핑 함수
-    private RoomDTO mapRow(ResultSet rs) throws Exception {
-        RoomDTO room = new RoomDTO();
-        room.setRoom_id(rs.getInt("room_id"));
+    /**
+     * 특정 동아리의 방 목록 조회
+     * @param clubId 동아리 ID (0 또는 음수면 전체)
+     */
+    public List<RoomDTO> findRoomsByClub(int clubId) {
 
-        // DB 컬럼 이름에 따라 둘 중 하나만 실제로 쓰일 거야
-        try {
-            room.setRoom_name(rs.getString("room_name"));
-        } catch (Exception e) {
-            room.setRoom_name(rs.getString("name"));
-        }
-
-        try { room.setLocation(rs.getString("location")); } catch (Exception e) {}
-        try { room.setCapacity(rs.getInt("capacity")); }   catch (Exception e) {}
-        // description 필드 없는 DTO 때문에 에러 나서 완전 제거
-
-        return room;
-    }
-
-    // 1) 전체 방 조회 (있어도 되고, 안 써도 됨)
-    public List<RoomDTO> findAll() {
         List<RoomDTO> list = new ArrayList<>();
 
-        String sql = "SELECT * FROM rooms ORDER BY room_id";
+        String baseSql =
+            "SELECT r.room_id, r.club_id, c.name AS club_name, r.name, " +
+            "       r.location, DATE_FORMAT(r.open_time, '%H:%i') AS open_time, " +
+            "       DATE_FORMAT(r.close_time, '%H:%i') AS close_time, " +
+            "       r.capacity, r.is_active " +
+            "FROM rooms r " +
+            "JOIN clubs c ON r.club_id = c.club_id " +
+            "WHERE r.is_active = 1 ";
 
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+        String orderBy = " ORDER BY c.name, r.name";
 
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        String sql;
+        if (clubId > 0) {
+            sql = baseSql + " AND r.club_id = ? " + orderBy;
+        } else {
+            sql = baseSql + orderBy;
         }
-
-        return list;
-    }
-
-    // 2) clubId 기준 방 조회 – HomeServlet에서 사용
-    public List<RoomDTO> findByClubId(Integer clubId) {
-        List<RoomDTO> list = new ArrayList<>();
-
-        String sql = "SELECT * FROM rooms WHERE club_id = ? ORDER BY room_id";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, clubId);
+            if (clubId > 0) {
+                pstmt.setInt(1, clubId);
+            }
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    list.add(mapRow(rs));
+                    RoomDTO room = new RoomDTO();
+                    room.setRoom_id(rs.getInt("room_id"));
+                    room.setClub_id(rs.getInt("club_id"));
+                    room.setClub_name(rs.getString("club_name"));
+                    room.setName(rs.getString("name"));
+                    room.setLocation(rs.getString("location"));
+                    room.setOpen_time(rs.getString("open_time"));
+                    room.setClose_time(rs.getString("close_time"));
+                    room.setCapacity(rs.getInt("capacity"));
+                    room.setActive(rs.getInt("is_active") == 1);
+
+                    list.add(room);
                 }
             }
 
@@ -73,5 +72,67 @@ public class RoomDAO {
         }
 
         return list;
+    }
+
+    /**
+     * 오늘 기준 인기 방(추천 공간) 상위 N개
+     */
+    public List<RoomDTO> findPopularRooms(String dateStr, int limit) {
+
+        List<RoomDTO> list = new ArrayList<>();
+
+        String sql =
+            "SELECT r.room_id, r.club_id, c.name AS club_name, r.name, r.location, " +
+            "       DATE_FORMAT(r.open_time, '%H:%i') AS open_time, " +
+            "       DATE_FORMAT(r.close_time, '%H:%i') AS close_time, " +
+            "       r.capacity, r.is_active, COUNT(res.reservation_id) AS cnt " +
+            "FROM rooms r " +
+            "JOIN clubs c ON r.club_id = c.club_id " +
+            "LEFT JOIN reservations res " +
+            "       ON r.room_id = res.room_id " +
+            "      AND res.reserve_date = ? " +
+            "      AND res.status = 'RESERVED' " +
+            "WHERE r.is_active = 1 " +
+            "GROUP BY r.room_id, r.club_id, c.name, r.name, r.location, r.open_time, r.close_time, r.capacity, r.is_active " +
+            "ORDER BY cnt DESC " +
+            "LIMIT ?";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, dateStr);
+            pstmt.setInt(2, limit);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    RoomDTO room = new RoomDTO();
+                    room.setRoom_id(rs.getInt("room_id"));
+                    room.setClub_id(rs.getInt("club_id"));
+                    room.setClub_name(rs.getString("club_name"));
+                    room.setName(rs.getString("name"));
+                    room.setLocation(rs.getString("location"));
+                    room.setOpen_time(rs.getString("open_time"));
+                    room.setClose_time(rs.getString("close_time"));
+                    room.setCapacity(rs.getInt("capacity"));
+                    room.setActive(rs.getInt("is_active") == 1);
+                    list.add(room);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    // =======================================
+    // 기존 HomeServlet 호환용 메서드
+    // - HomeServlet 에서 roomDao.findByClubId(Integer) 호출
+    // =======================================
+    public List<RoomDTO> findByClubId(Integer clubId) {
+        // null 이면 전체, 아니면 해당 동아리만
+        int cid = (clubId == null ? 0 : clubId.intValue());
+        return findRoomsByClub(cid);
     }
 }

@@ -5,21 +5,19 @@ import java.security.MessageDigest;
 public class SHA256 {
 
     public static String hash(String input) {
-        if (input == null) return null;
 
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] bytes = md.digest(input.getBytes("UTF-8"));
+            byte[] hash = md.digest(input.getBytes("UTF-8"));
 
             StringBuilder sb = new StringBuilder();
-            for (byte b : bytes) {
+            for (byte b : hash) {
                 sb.append(String.format("%02x", b));
             }
-            return sb.toString();
 
+            return sb.toString();
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException(e);
         }
     }
 }

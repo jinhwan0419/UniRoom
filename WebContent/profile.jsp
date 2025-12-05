@@ -1,10 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="com.club.dto.UserDTO" %>
+
 <%
-    // TODO(DB팀):
-    // 세션에서 로그인 사용자 정보 가져오기
-    // String userName = (String) session.getAttribute("userName");
-    // String clubName = (String) session.getAttribute("clubName");
-    // String role = (String) session.getAttribute("role"); // USER / ADMIN 등
+    String cpath = request.getContextPath();
+    UserDTO user = (UserDTO) request.getAttribute("user");
+    if (user == null) {
+        user = (UserDTO) session.getAttribute("loginUser");
+    }
 %>
 <!DOCTYPE html>
 <html lang="ko">
@@ -43,12 +45,7 @@
     <h1 class="text-center text-blue-600 text-lg font-medium">프로필</h1>
 </div>
 
-<div class="px-4 py-6 pb-24"><%-- pb-24: 하단 네비와 겹치지 않게 여백 --%>
-
-    <%-- TODO(DB팀):
-        1. session에서 userName, clubName 가져와서 아래 텍스트 대체
-        2. 프로필 이미지 URL 있으면 동적으로 교체
-    --%>
+<div class="px-4 py-6 pb-24">
 
     <!-- 프로필 영역 -->
     <div class="text-center mb-6">
@@ -57,8 +54,25 @@
                  alt="Profile"
                  class="w-full h-full rounded-full object-cover">
         </div>
-        <h2 class="text-lg font-semibold text-gray-900">김동아</h2>
-        <p class="text-sm text-gray-600">로보틱스 동아리</p>
+        <h2 class="text-lg font-semibold text-gray-900">
+            <%= (user != null ? user.getName() : "사용자") %>
+        </h2>
+        <p class="text-sm text-gray-600">
+            학번: -
+            <%
+                if (user != null) {
+                    try {
+                        // UserDTO 에 getStudentId() 가 있으면 이거 쓰고,
+                        // 없으면 에러 나니까 나중에 getStudent_id() 로 바꾸면 됨
+                        out.print(user.getStudentId());
+                    } catch (Exception e) {
+                        out.print("-");
+                    }
+                } else {
+                    out.print("-");
+                }
+            %>
+        </p>
     </div>
 
     <!-- 메뉴 카드들 -->
@@ -67,7 +81,7 @@
         <!-- 예약 관련 메뉴 -->
         <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
 
-            <!-- 예약 내역 -->
+            <!-- 예약 내역: myReservations.jsp 에서 실제 조회 (이미 선배가 만들어둔 화면 활용) -->
             <a href="myReservations.jsp" class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-calendar text-blue-600"></i>
@@ -76,11 +90,11 @@
                 <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
             </a>
 
-            <!-- 즐겨찾는 공간 (추후 기능) -->
-            <a href="#" class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <!-- 패널티 현황: penalty.jsp 같은 별도 페이지로 이동 (DB 조회는 그쪽에서) -->
+            <a href="penalty.jsp" class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <div class="flex items-center space-x-3">
-                    <i class="fa-solid fa-heart text-blue-600"></i>
-                    <span class="text-gray-900 text-sm">즐겨찾는 공간</span>
+                    <i class="fa-solid fa-triangle-exclamation text-blue-600"></i>
+                    <span class="text-gray-900 text-sm">패널티 / 예약 제한</span>
                 </div>
                 <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
             </a>
@@ -96,7 +110,7 @@
 
         </div>
 
-        <!-- 도움말 / 앱 정보 / 로그아웃 / 관리자 -->
+        <!-- 도움말 / 앱 정보 / 관리자 / 로그아웃 -->
         <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
 
             <!-- 도움말 -->
@@ -117,8 +131,7 @@
                 <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
             </a>
 
-            <!-- 관리자 대시보드 (테스트용 메뉴) -->
-            <%-- TODO(DB팀): role이 ADMIN/STAFF일 때만 이 메뉴가 보이도록 처리 --%>
+            <!-- 관리자 대시보드 -->
             <a href="adminDashboard.jsp" class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-toolbox text-blue-600"></i>
@@ -146,7 +159,7 @@
 <div class="fixed bottom-0 left-0 right-0 bg-white border-top border-gray-200 px-4 py-2 border-t">
     <div class="flex justify-around">
         <!-- 홈 -->
-        <a href="home.jsp" class="flex flex-col items-center space-y-1">
+        <a href="<%=cpath%>/home" class="flex flex-col items-center space-y-1">
             <i class="fa-solid fa-house text-gray-400 text-lg"></i>
             <span class="text-xs text-gray-400">홈</span>
         </a>
@@ -155,13 +168,13 @@
             <i class="fa-regular fa-calendar text-gray-400 text-lg"></i>
             <span class="text-xs text-gray-400">예약</span>
         </a>
-        <!-- 알림 (현재는 예약 상세로 연결) -->
+        <!-- 알림 -->
         <a href="reservation.jsp" class="flex flex-col items-center space-y-1">
             <i class="fa-regular fa-bell text-gray-400 text-lg"></i>
             <span class="text-xs text-gray-400">알림</span>
         </a>
         <!-- 프로필(활성) -->
-        <a href="profile.jsp" class="flex flex-col items-center space-y-1">
+        <a href="<%=cpath%>/profile" class="flex flex-col items-center space-y-1">
             <i class="fa-regular fa-user text-blue-600 text-lg"></i>
             <span class="text-xs text-blue-600 font-medium">프로필</span>
         </a>

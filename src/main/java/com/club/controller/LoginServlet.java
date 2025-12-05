@@ -3,33 +3,31 @@ package com.club.controller;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 
 import com.club.dao.UserDAO;
 import com.club.dto.UserDTO;
-import com.club.util.SHA256;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1L;
+    private UserDAO userDao = new UserDAO();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
+        String studentId = request.getParameter("studentId");  // ← name="studentId"
+        String password  = request.getParameter("password");  // ← name="password"
 
-        String studentId = request.getParameter("student_id");
-        String password = request.getParameter("password");
-        String pwHash = SHA256.hash(password);
+        System.out.println("로그인 시도: " + studentId + " / " + password);
 
-        UserDAO userDAO = new UserDAO();
-        UserDTO user = userDAO.login(studentId, pwHash);
+        UserDTO user = userDao.login(studentId, password);
 
         if (user == null) {
-            request.setAttribute("error", "학번 또는 비밀번호가 올바르지 않습니다.");
+            request.setAttribute("errorMsg", "학번 또는 비밀번호가 올바르지 않습니다.");
             request.getRequestDispatcher("/login.jsp").forward(request, response);
             return;
         }
@@ -37,7 +35,13 @@ public class LoginServlet extends HttpServlet {
         HttpSession session = request.getSession();
         session.setAttribute("loginUser", user);
 
-        // 👉 지금은 그냥 사용자 홈으로 보낸다
-        response.sendRedirect(request.getContextPath() + "/home");
+        String cpath = request.getContextPath();
+        response.sendRedirect(cpath + "/home");
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        doPost(req, resp);
     }
 }

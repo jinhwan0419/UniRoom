@@ -5,22 +5,27 @@ import java.sql.DriverManager;
 
 public class DBUtil {
 
-    // DB 연결을 얻어오는 메서드
-    public static Connection getConnection() {
-        Connection conn = null;
+    private static final String URL =
+        "jdbc:mysql://localhost:3306/uniroom1?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul";
+        //                    ▲ 여기 DB 이름 uniroom1 로!!
+
+    private static final String USER = "root";        // 네 MySQL 아이디
+    private static final String PASSWORD = "Yoonseo31@"; // 네 MySQL 비번
+
+    static {
         try {
-            // MySQL 드라이버 로드
             Class.forName("com.mysql.cj.jdbc.Driver");
-
-            // DB 접속 정보
-            String url = "jdbc:mysql://localhost:3306/club_reservation?serverTimezone=Asia/Seoul&characterEncoding=UTF-8";
-            String user = "root";          // 네 MySQL 아이디
-            String password = "Yoonseo31@";   // 네 MySQL 비밀번호
-
-            conn = DriverManager.getConnection(url, user, password);
-        } catch (Exception e) {
-            e.printStackTrace();  // 나중에 로그로 바꿔도 됨
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
-        return conn;
+    }
+
+    public static Connection getConnection() {
+        try {
+            return DriverManager.getConnection(URL, USER, PASSWORD);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("DB 연결 실패", e);
+        }
     }
 }

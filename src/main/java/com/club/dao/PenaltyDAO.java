@@ -6,57 +6,71 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.club.dto.PenaltyDTO;
+import com.club.dto.PenaltySummaryDTO;
 import com.club.util.DBUtil;
 
+/**
+ * 패널티(노쇼) 관련 DAO
+ * - 관리자 패널티 목록
+ * - 사용자별 패널티 요약
+ */
 public class PenaltyDAO {
 
-    // 1. 패널티 한 건 추가 (노쇼 발생 시)
-    public int insert(PenaltyDTO dto) {
-        int result = 0;
+    /**
+     * 패널티 요약 목록 조회 (관리자 화면용)
+     * @param keyword 학번/이름 검색어 (null 또는 "" 이면 전체)
+     */
+    public List<PenaltySummaryDTO> findPenaltySummary(String keyword) {
 
-        String sql = "INSERT INTO penalties (user_id, reason, points, created_at) "
-                   + "VALUES (?, ?, ?, NOW())";
+        List<PenaltySummaryDTO> list = new ArrayList<>();
 
-        try (
-            Connection conn = DBUtil.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-        ) {
-            pstmt.setInt(1, dto.getUser_id());
-            pstmt.setString(2, dto.getReason());
-            pstmt.setInt(3, dto.getPoints());
+        String baseSql =
+            "SELECT u.user_id, u.student_id, u.name, c.name AS club_name, " +
+            "       COUNT(p.id) AS no_show_count, " +
+            "       MAX(p.start_date) AS last_no_show_date, " +
+            "       MAX(p.end_date)   AS block_end_date " +
+            "FROM users u " +
+            "LEFT JOIN penalties p ON u.user_id = p.user_id " +
+            "LEFT JOIN clubs c ON u.club_id = c.club_id ";
 
-            result = pstmt.executeUpdate();   // 1이면 성공
-        } catch (Exception e) {
-            e.printStackTrace();
+        String where = "";
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            where = "WHERE u.student_id LIKE ? OR u.name LIKE ? ";
         }
 
-        return result;
-    }
+        String groupOrder =
+            "GROUP BY u.user_id, u.student_id, u.name, c.name " +
+            "ORDER BY no_show_count DESC, u.student_id ASC";
 
-    // 2. 특정 유저의 패널티 전체 조회 (마이페이지용)
-    public List<PenaltyDTO> findByUserId(int userId) {
-        List<PenaltyDTO> list = new ArrayList<>();
+        String sql = baseSql + where + groupOrder;
 
-        String sql = "SELECT * FROM penalties WHERE user_id = ? ORDER BY created_at DESC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        try (
-            Connection conn = DBUtil.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-        ) {
-            pstmt.setInt(1, userId);
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String like = "%" + keyword.trim() + "%";
+                pstmt.setString(1, like);
+                pstmt.setString(2, like);
+            }
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    PenaltyDTO dto = new PenaltyDTO();
-                    dto.setPenalty_id(rs.getInt("penalty_id"));
-                    dto.setUser_id(rs.getInt("user_id"));
-                    dto.setReason(rs.getString("reason"));
-                    dto.setPoints(rs.getInt("points"));
-                    dto.setCreated_at(rs.getString("created_at"));
+                    PenaltySummaryDTO dto = new PenaltySummaryDTO();
+                    dto.setUserId(rs.getInt("user_id"));
+                    dto.setStudentId(rs.getString("student_id"));
+                    dto.setUserName(rs.getString("name"));
+                    dto.setClubName(rs.getString("club_name"));
+                    dto.setNoShowCount(rs.getInt("no_show_count"));
+
+                    java.sql.Date last = rs.getDate("last_no_show_date");
+                    java.sql.Date block = rs.getDate("block_end_date");
+                    if (last != null) dto.setLastNoShowDate(last.toLocalDate());
+                    if (block != null) dto.setBlockEndDate(block.toLocalDate());
+
                     list.add(dto);
                 }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -64,29 +78,49 @@ public class PenaltyDAO {
         return list;
     }
 
-    // 3. 특정 유저의 패널티 총점 조회 (예약 제한 여부 판단용)
-    public int getTotalPointsByUser(int userId) {
-        int total = 0;
+    /**
+     * 특정 사용자 1명의 패널티 요약 조회
+     */
+    public PenaltySummaryDTO findByUserId(int userId) {
 
-        String sql = "SELECT IFNULL(SUM(points), 0) AS total_points "
-                   + "FROM penalties WHERE user_id = ?";
+        PenaltySummaryDTO dto = null;
 
-        try (
-            Connection conn = DBUtil.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-        ) {
+        String sql =
+            "SELECT u.user_id, u.student_id, u.name, c.name AS club_name, " +
+            "       COUNT(p.id) AS no_show_count, " +
+            "       MAX(p.start_date) AS last_no_show_date, " +
+            "       MAX(p.end_date)   AS block_end_date " +
+            "FROM users u " +
+            "LEFT JOIN penalties p ON u.user_id = p.user_id " +
+            "LEFT JOIN clubs c ON u.club_id = c.club_id " +
+            "WHERE u.user_id = ? " +
+            "GROUP BY u.user_id, u.student_id, u.name, c.name";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
             pstmt.setInt(1, userId);
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    total = rs.getInt("total_points");
+                    dto = new PenaltySummaryDTO();
+                    dto.setUserId(rs.getInt("user_id"));
+                    dto.setStudentId(rs.getString("student_id"));
+                    dto.setUserName(rs.getString("name"));
+                    dto.setClubName(rs.getString("club_name"));
+                    dto.setNoShowCount(rs.getInt("no_show_count"));
+
+                    java.sql.Date last = rs.getDate("last_no_show_date");
+                    java.sql.Date block = rs.getDate("block_end_date");
+                    if (last != null) dto.setLastNoShowDate(last.toLocalDate());
+                    if (block != null) dto.setBlockEndDate(block.toLocalDate());
                 }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return total;
+        return dto;
     }
 }
-

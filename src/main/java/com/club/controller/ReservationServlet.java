@@ -19,14 +19,21 @@ import com.club.dto.UserDTO;
 @WebServlet("/ReservationServlet")
 public class ReservationServlet extends HttpServlet {
 
+    private static final long serialVersionUID = 1L;
+
+    private final ReservationDAO reservationDAO = new ReservationDAO();
+
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest request,
+                          HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
 
         HttpSession session = request.getSession(false);
-        UserDTO loginUser = (session != null) ? (UserDTO) session.getAttribute("loginUser") : null;
+        UserDTO loginUser = (session != null)
+                ? (UserDTO) session.getAttribute("loginUser")
+                : null;
 
         if (loginUser == null) {
             response.sendRedirect(request.getContextPath() + "/login.jsp");
@@ -34,63 +41,42 @@ public class ReservationServlet extends HttpServlet {
         }
 
         try {
-            // 1. 파라미터 받기
+            int userId = loginUser.getUser_id();
+
             int roomId = Integer.parseInt(request.getParameter("roomId"));
-            String reserveDate = request.getParameter("reserveDate"); // yyyy-MM-dd
-            String start = request.getParameter("startTime");         // HH:mm or HH:mm:ss
-            String end   = request.getParameter("endTime");           // 일단 start와 동일하게 들어오는 상태
+            String reserveDateStr = request.getParameter("reserveDate");
+            String startTimeStr = request.getParameter("startTime");
+            String endTimeStr = request.getParameter("endTime");
 
-            if (reserveDate == null || reserveDate.trim().isEmpty()) {
-                reserveDate = LocalDate.now().toString();
+            if (reserveDateStr == null || reserveDateStr.isEmpty()) {
+                reserveDateStr = LocalDate.now().toString();
+            }
+            if (startTimeStr == null || startTimeStr.isEmpty()) {
+                startTimeStr = "09:00";
+            }
+            if (endTimeStr == null || endTimeStr.isEmpty()) {
+                // 기본 1시간 후
+                LocalTime start = LocalTime.parse(startTimeStr);
+                endTimeStr = start.plusHours(1).toString();
             }
 
-            // 2. 시간 파싱
-            LocalDate date = LocalDate.parse(reserveDate);
+            LocalDate date = LocalDate.parse(reserveDateStr);
+            LocalTime start = LocalTime.parse(startTimeStr);
+            LocalTime end = LocalTime.parse(endTimeStr);
 
-            // HH:mm 또는 HH:mm:ss 둘 다 처리
-            LocalTime startTime;
-            if (start == null || start.isEmpty()) {
-                // 기본 09:00
-                startTime = LocalTime.of(9, 0);
-            } else {
-                if (start.length() == 5) { // "HH:mm"
-                    startTime = LocalTime.parse(start);
-                } else {
-                    startTime = LocalTime.parse(start.substring(0, 5));
-                }
-            }
+            Timestamp startTs = Timestamp.valueOf(LocalDateTime.of(date, start));
+            Timestamp endTs = Timestamp.valueOf(LocalDateTime.of(date, end));
 
-            LocalTime endTime;
-            if (end != null && !end.isEmpty()) {
-                if (end.length() == 5) {
-                    endTime = LocalTime.parse(end);
-                } else {
-                    endTime = LocalTime.parse(end.substring(0, 5));
-                }
-            } else {
-                // endTime이 비어 있으면 기본적으로 1시간 뒤로
-                endTime = startTime.plusHours(1);
-            }
+            reservationDAO.createReservation(userId, roomId, startTs, endTs);
 
-            LocalDateTime startDateTime = LocalDateTime.of(date, startTime);
-            LocalDateTime endDateTime   = LocalDateTime.of(date, endTime);
+            // 예약 후 다시 홈으로
+            String redirectUrl = String.format("%s/home?reserveDate=%s&startTime=%s",
+                    request.getContextPath(), reserveDateStr, startTimeStr);
 
-            Timestamp startTs = Timestamp.valueOf(startDateTime);
-            Timestamp endTs   = Timestamp.valueOf(endDateTime);
-
-            // 3. DAO 호출
-            ReservationDAO reservationDAO = new ReservationDAO();
-            reservationDAO.createReservation(roomId, loginUser.getUser_id(), startTs, endTs);
-
-            // 4. 다시 홈으로 (필터 유지하고 싶으면 reserveDate/startTime도 같이 넘겨줌)
-            String redirectUrl = request.getContextPath()
-                                + "/home?reserveDate=" + reserveDate
-                                + "&startTime=" + start;
             response.sendRedirect(redirectUrl);
 
         } catch (Exception e) {
             e.printStackTrace();
-            // 에러 나면 일단 홈으로 돌려보내기
             response.sendRedirect(request.getContextPath() + "/home");
         }
     }

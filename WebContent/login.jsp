@@ -1,7 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%> 
 <%
+    request.setCharacterEncoding("UTF-8");
     String cpath = request.getContextPath();
-    String errorMsg = (String) request.getAttribute("errorMsg");
+    // 서블릿에서 setAttribute("error", ...)로 넣으니까 그걸 읽음
+    String errorMsg = (String) request.getAttribute("error");
 %>
 <!DOCTYPE html>
 <html>
@@ -42,30 +44,31 @@
         <p class="text-gray-600 text-sm">동아리실 예약이 이제 더 쉬워졌습니다</p>
     </div>
 
-    <%-- 🔴 로그인 실패 메시지 (없으면 안 보임) --%>
+    <%-- 🔴 로그인 실패 메시지 표시 --%>
     <% if (errorMsg != null) { %>
         <div class="mb-2 text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
-            <i class="fa-solid fa-circle-exclamation mr-1"></i> <%=errorMsg%>
+            <i class="fa-solid fa-circle-exclamation mr-1"></i> <%= errorMsg %>
         </div>
     <% } %>
 
     <!-- 로그인 폼 -->
-   <form action="<%=cpath%>/login" method="post" class="space-y-4">
+    <form action="<%=cpath%>/login" method="post" class="space-y-4">
 
+       <!-- 학번 -->
+    <div class="mb-4">
+        <label for="studentId" class="text-sm text-gray-600">학번</label>
+        <input type="text" id="studentId" name="studentId"
+               class="w-full border rounded-lg px-3 py-2 text-sm"
+               placeholder="학번을 입력하세요">
+    </div>
 
-        <!-- 학번 -->
-        <div>
-            <label class="block text-gray-700 text-sm font-medium mb-2">학번</label>
-            <input type="text" name="studentId" placeholder="학번을 입력하세요"
-                   class="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-        </div>
-
-        <!-- 비밀번호 -->
-        <div>
-            <label class="block text-gray-700 text-sm font-medium mb-2">비밀번호</label>
-            <input type="password" name="password" placeholder="비밀번호를 입력하세요"
-                   class="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-        </div>
+    <!-- 비밀번호 -->
+    <div class="mb-4">
+        <label for="password" class="text-sm text-gray-600">비밀번호</label>
+        <input type="password" id="password" name="password"
+               class="w-full border rounded-lg px-3 py-2 text-sm"
+               placeholder="비밀번호를 입력하세요">
+    </div>
 
         <!-- 로그인 버튼 -->
         <button type="submit"
@@ -74,19 +77,13 @@
         </button>
     </form>
 
-    <!-- Social Login (UI용) -->
-    <div class="space-y-3 mt-6">
-        <div class="relative">
-            <div class="absolute inset-0 flex items-center">
-                <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="mt-4 text-center">
-    <a href="${pageContext.request.contextPath}/signup.jsp"
-       class="text-sm text-blue-500 font-semibold">
-        아직 계정이 없나요? 회원가입
-    </a>
-</div>
-            
+    <!-- 회원가입 링크 -->
+    <div class="mt-4 text-center">
+        <%-- ★ signup.jsp 가 아니라 /register 서블릿으로 이동 --%>
+        <a href="<%=cpath%>/register"
+           class="text-sm text-blue-500 font-semibold">
+            아직 계정이 없나요? 회원가입
+        </a>
     </div>
 	
 </main>
