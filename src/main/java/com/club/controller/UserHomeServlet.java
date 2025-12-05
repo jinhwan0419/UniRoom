@@ -16,7 +16,7 @@ import com.club.dto.RoomDTO;
 import com.club.dto.UserDTO;
 
 @WebServlet("/home")
-public class HomeServlet extends HttpServlet {
+public class UserHomeServlet extends HttpServlet {   // 🔥 클래스 이름 UserHomeServlet 으로!
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -30,13 +30,13 @@ public class HomeServlet extends HttpServlet {
             return;
         }
 
-        // 1. 파라미터 받기
+        // ---- 필터 파라미터 처리 ----
         String reserveDate = request.getParameter("reserveDate");
         String startTime   = request.getParameter("startTime");
         String clubIdParam = request.getParameter("clubId");
 
-        int userClubId = loginUser.getClubId(); // UserDTO에 getClubId() 있다고 가정
-        Integer clubId = null;
+        int userClubId = loginUser.getClubId();
+        Integer clubId;
 
         if (clubIdParam != null && !clubIdParam.trim().isEmpty()) {
             try {
@@ -49,27 +49,25 @@ public class HomeServlet extends HttpServlet {
         }
 
         if (reserveDate == null || reserveDate.trim().isEmpty()) {
-            reserveDate = LocalDate.now().toString();   // 오늘 날짜 yyyy-MM-dd
+            reserveDate = LocalDate.now().toString();
         }
         if (startTime == null) {
             startTime = "";
         }
 
-        // 2. 방 목록 조회 (내 동아리 방만)
+        // ---- 방 목록 조회 ----
         RoomDAO roomDAO = new RoomDAO();
         List<RoomDTO> allRooms = roomDAO.findByClubId(clubId);
 
-        // 지금은 인기방 = 전체방으로 그냥 둠
         List<RoomDTO> popularRooms = allRooms;
 
-        // 3. JSP에 넘길 값 세팅
+        // JSP에 전달
         request.setAttribute("reserveDate", reserveDate);
         request.setAttribute("startTime", startTime);
         request.setAttribute("clubId", clubId);
         request.setAttribute("allRooms", allRooms);
         request.setAttribute("popularRooms", popularRooms);
 
-        // 4. home.jsp로 포워드
         request.getRequestDispatcher("/home.jsp").forward(request, response);
     }
 }

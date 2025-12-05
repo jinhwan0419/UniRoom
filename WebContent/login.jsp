@@ -50,7 +50,9 @@
     <% } %>
 
     <!-- 로그인 폼 -->
-    <form action="<%=cpath%>/LoginServlet" method="post" class="space-y-4">
+   <form action="<%=cpath%>/login" method="post" class="space-y-4">
+
+
         <!-- 학번 -->
         <div>
             <label class="block text-gray-700 text-sm font-medium mb-2">학번</label>
@@ -78,22 +80,15 @@
             <div class="absolute inset-0 flex items-center">
                 <div class="w-full border-t border-gray-300"></div>
             </div>
-            <div class="relative flex justify-center text-sm">
-                <span class="px-2 bg-gray-50 text-gray-500">또는</span>
-            </div>
-        </div>
-
-        <button class="w-full bg-yellow-400 text-gray-900 py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
-            <i class="fa-solid fa-comment text-lg"></i>
-            <span>카카오로 로그인</span>
-        </button>
-
-        <button class="w-full bg-white border border-gray-200 text-gray-900 py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
-            <i class="fa-brands fa-google text-lg text-red-500"></i>
-            <span>Google로 로그인</span>
-        </button>
+            <div class="mt-4 text-center">
+    <a href="${pageContext.request.contextPath}/signup.jsp"
+       class="text-sm text-blue-500 font-semibold">
+        아직 계정이 없나요? 회원가입
+    </a>
+</div>
+            
     </div>
-
+	
 </main>
 
 </body>

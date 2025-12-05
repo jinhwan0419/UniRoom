@@ -147,4 +147,13 @@ public class ClubDAO {
 
         return result;
     }
+
+    /**
+     * 6. 홈 화면용 편의 메서드
+     *    - 활성 동아리 목록을 홈 화면에 보여줄 때 사용
+     */
+    public List<ClubDTO> getAllClubs() {
+        // 필요하면 findAll()으로 바꿔도 됨
+        return findActive();
+    }
 }

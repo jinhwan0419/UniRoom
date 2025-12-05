@@ -2,32 +2,34 @@ package com.club.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 
-import com.club.dto.ReservationDTO;
 import com.club.util.DBUtil;
 
 public class ReservationDAO {
 
-    // 예약 저장
-    public int insertReservation(ReservationDTO reservation) {
-        String sql = "INSERT INTO reservations " +
-                     "(user_id, room_id, reserve_date, start_time, end_time) " +
-                     "VALUES (?, ?, ?, ?, ?)";
+    // ✅ 예약 생성 – ReservationServlet에서 사용
+    public int createReservation(int roomId, int userId,
+                                 Timestamp startTime, Timestamp endTime) {
 
-        try (
-            Connection conn = DBUtil.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-        ) {
-            pstmt.setInt(1, reservation.getUser_id());
-            pstmt.setInt(2, reservation.getRoom_id());
-            pstmt.setString(3, reservation.getReserve_date());
-            pstmt.setString(4, reservation.getStart_time());
-            pstmt.setString(5, reservation.getEnd_time());
+        String sql =
+            "INSERT INTO reservations (room_id, user_id, start_time, end_time, status) " +
+            "VALUES (?, ?, ?, ?, 'BOOKED')";
 
-            return pstmt.executeUpdate();   // 1 이상이면 성공
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, roomId);
+            pstmt.setInt(2, userId);
+            pstmt.setTimestamp(3, startTime);
+            pstmt.setTimestamp(4, endTime);
+
+            return pstmt.executeUpdate();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return 0;
     }
 }
