@@ -99,5 +99,13 @@ public class UserDTO {
         // 패스워드 필드 이름이 pwd, userPwd 등이라면 여기만 바꾸면 됨.
         this.password = password;
     }
+    public int getUserId() {
+        return user_id;
+    }
+
+    public void setUserId(int userId) {
+        this.user_id = userId;
+    }
+
 
 }

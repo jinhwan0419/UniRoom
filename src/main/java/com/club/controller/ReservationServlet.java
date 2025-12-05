@@ -1,9 +1,7 @@
 package com.club.controller;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import javax.servlet.ServletException;
@@ -20,64 +18,64 @@ import com.club.dto.UserDTO;
 public class ReservationServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-
-    private final ReservationDAO reservationDAO = new ReservationDAO();
+    private ReservationDAO reservationDao = new ReservationDAO();
 
     @Override
-    protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
+        String cpath = request.getContextPath();
 
+        // 1. 로그인 유저 확인
         HttpSession session = request.getSession(false);
-        UserDTO loginUser = (session != null)
-                ? (UserDTO) session.getAttribute("loginUser")
-                : null;
-
+        UserDTO loginUser = (session != null) ? (UserDTO) session.getAttribute("loginUser") : null;
         if (loginUser == null) {
-            response.sendRedirect(request.getContextPath() + "/login.jsp");
+            response.sendRedirect(cpath + "/login.jsp");
             return;
         }
 
-        try {
-            int userId = loginUser.getUser_id();
+        int userId = loginUser.getUserId();   // ★ UserDTO PK getter에 맞게
 
-            int roomId = Integer.parseInt(request.getParameter("roomId"));
-            String reserveDateStr = request.getParameter("reserveDate");
-            String startTimeStr = request.getParameter("startTime");
-            String endTimeStr = request.getParameter("endTime");
+        // 2. 폼 파라미터 읽기 (room_detail.jsp에서 오는 그대로)
+        String roomIdStr = request.getParameter("roomId");
+        String dateStr   = request.getParameter("date");
+        String timeStr   = request.getParameter("time");
 
-            if (reserveDateStr == null || reserveDateStr.isEmpty()) {
-                reserveDateStr = LocalDate.now().toString();
-            }
-            if (startTimeStr == null || startTimeStr.isEmpty()) {
-                startTimeStr = "09:00";
-            }
-            if (endTimeStr == null || endTimeStr.isEmpty()) {
-                // 기본 1시간 후
-                LocalTime start = LocalTime.parse(startTimeStr);
-                endTimeStr = start.plusHours(1).toString();
-            }
+        System.out.println("[ReservationServlet] roomIdStr=" + roomIdStr +
+                ", dateStr=" + dateStr + ", timeStr=" + timeStr);
 
-            LocalDate date = LocalDate.parse(reserveDateStr);
-            LocalTime start = LocalTime.parse(startTimeStr);
-            LocalTime end = LocalTime.parse(endTimeStr);
+        // 3. 필수값 체크 (null / 빈문자 방지 : Java8 호환)
+        if (roomIdStr == null || roomIdStr.trim().equals("") ||
+            dateStr   == null || dateStr.trim().equals("")   ||
+            timeStr   == null || timeStr.trim().equals("")) {
 
-            Timestamp startTs = Timestamp.valueOf(LocalDateTime.of(date, start));
-            Timestamp endTs = Timestamp.valueOf(LocalDateTime.of(date, end));
+            System.out.println("[ReservationServlet] 잘못된 파라미터로 인한 실패");
+            response.sendRedirect(cpath + "/home?error=badParam");
+            return;
+        }
 
-            reservationDAO.createReservation(userId, roomId, startTs, endTs);
+        int roomId = Integer.parseInt(roomIdStr);
+        LocalDate date  = LocalDate.parse(dateStr);      // "2025-12-06"
+        LocalTime start = LocalTime.parse(timeStr);      // "09:00"
+        LocalTime end   = start.plusHours(1);            // 1시간 사용 기준
 
-            // 예약 후 다시 홈으로
-            String redirectUrl = String.format("%s/home?reserveDate=%s&startTime=%s",
-                    request.getContextPath(), reserveDateStr, startTimeStr);
+        // 4. 중복 체크 + 예약 생성 (DB 컬럼: date, time 사용)
+        boolean ok = reservationDao.createReservationChecked(
+                userId, roomId, date, start, end
+        );
 
-            response.sendRedirect(redirectUrl);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/home");
+        // 5. 결과에 따라 이동
+        if (ok) {
+            // 성공 → 내 예약 화면
+            response.sendRedirect(cpath + "/myReservations");
+        } else {
+            // 겹치는 예약 → 다시 상세 페이지로
+            response.sendRedirect(
+                    cpath + "/room/detail?roomId=" + roomId +
+                    "&date=" + dateStr +
+                    "&error=duplicate"
+            );
         }
     }
 }

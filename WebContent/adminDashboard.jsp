@@ -1,4 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<% String cpath = request.getContextPath(); %>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -153,10 +155,12 @@
 
     <!-- 관리 메뉴 이동 -->
     <section class="grid grid-cols-2 gap-3">
-        <a href="adminRooms.jsp" class="bg-white rounded-xl p-4 shadow-sm flex flex-col items-center justify-center space-y-2">
-            <i class="fa-solid fa-door-open text-blue-600 text-xl"></i>
-            <span class="text-sm font-medium text-gray-800">공간 관리</span>
-        </a>
+        <a href="<%= cpath %>/admin/rooms"
+   class="flex flex-col items-center justify-center py-6 text-sm text-gray-700">
+    <i class="fa-solid fa-building text-xl mb-2"></i>
+    <span>공간 관리</span>
+</a>
+
 
         <a href="adminPenalties.jsp" class="bg-white rounded-xl p-4 shadow-sm flex flex-col items-center justify-center space-y-2">
             <i class="fa-solid fa-user-slash text-red-500 text-xl"></i>

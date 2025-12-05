@@ -2,6 +2,9 @@ package com.club.dto;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.sql.Date;
+import java.sql.Time;
+
 
 /**
  * 예약 정보 DTO
@@ -16,6 +19,8 @@ public class ReservationDTO {
     private LocalTime start_time;
     private LocalTime end_time;
     private String status;
+    private Date date;
+    private Time time;
 
     // 화면 표시용
     private String user_name;
@@ -91,5 +96,20 @@ public class ReservationDTO {
 
     public void setRoom_name(String room_name) {
         this.room_name = room_name;
+    }
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public Time getTime() {
+        return time;
+    }
+
+    public void setTime(Time time) {
+        this.time = time;
     }
 }

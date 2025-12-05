@@ -90,23 +90,27 @@
                 <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
             </a>
 
-            <!-- 패널티 현황: penalty.jsp 같은 별도 페이지로 이동 (DB 조회는 그쪽에서) -->
-            <a href="penalty.jsp" class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                <div class="flex items-center space-x-3">
-                    <i class="fa-solid fa-triangle-exclamation text-blue-600"></i>
-                    <span class="text-gray-900 text-sm">패널티 / 예약 제한</span>
-                </div>
-                <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
-            </a>
+            <!-- 패널티 / 예약 제한 -->
+			<a href="<%=cpath%>/penalty"
+   			class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+    		<div class="flex items-center space-x-3">
+       			 <i class="fa-solid fa-triangle-exclamation text-blue-600"></i>
+       	 			<span class="text-gray-900 text-sm">패널티 / 예약 제한</span>
+    			</div>
+   		 	<i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
+			</a>
 
-            <!-- 알림 설정 (추후 기능) -->
-            <a href="#" class="flex items-center justify-between px-4 py-3">
-                <div class="flex items-center space-x-3">
-                    <i class="fa-solid fa-bell text-blue-600"></i>
-                    <span class="text-gray-900 text-sm">알림 설정</span>
-                </div>
-                <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
-            </a>
+
+			<!-- 알림 설정 -->
+			<a href="notificationSettings.jsp"
+  			 class="flex items-center justify-between px-4 py-3">
+   			 <div class="flex items-center space-x-3">
+       			 <i class="fa-solid fa-bell text-blue-600"></i>
+        			<span class="text-gray-900 text-sm">알림 설정</span>
+    			</div>
+   			 <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
+			</a>
+
 
         </div>
 
@@ -127,15 +131,6 @@
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-info-circle text-blue-600"></i>
                     <span class="text-gray-900 text-sm">앱 정보</span>
-                </div>
-                <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
-            </a>
-
-            <!-- 관리자 대시보드 -->
-            <a href="adminDashboard.jsp" class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                <div class="flex items-center space-x-3">
-                    <i class="fa-solid fa-toolbox text-blue-600"></i>
-                    <span class="text-gray-900 text-sm">관리자 대시보드</span>
                 </div>
                 <i class="fa-solid fa-chevron-right text-gray-400 text-xs"></i>
             </a>

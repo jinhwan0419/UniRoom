@@ -1,17 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.List" %>
-<%@ page import="com.club.dto.ReservationDTO" %>
-
 <%
     String cpath = request.getContextPath();
-    List<ReservationDTO> upcoming =
-        (List<ReservationDTO>) request.getAttribute("upcomingReservations");
 %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>UniRoom - 알림</title>
+    <title>UniRoom - 알림 설정</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
@@ -23,7 +18,6 @@
         * { font-family: 'Pretendard', sans-serif; }
     </style>
 </head>
-
 <body class="bg-gray-50 text-gray-900">
 
 <!-- 상태바 -->
@@ -37,51 +31,33 @@
 </div>
 
 <!-- 헤더 -->
-<div class="bg-white px-4 py-3 border-b border-gray-200">
-    <h1 class="text-center text-blue-600 text-lg font-medium">알림</h1>
+<div class="bg-white px-4 py-3 border-b border-gray-200 flex items-center">
+    <button onclick="history.back()" class="text-gray-500 text-lg mr-2">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <h1 class="flex-1 text-center text-blue-600 text-lg font-medium">알림 설정</h1>
+    <div class="w-6"></div>
 </div>
 
 <main class="px-4 py-4 pb-24 space-y-4">
 
-    <!-- 안내 텍스트 -->
     <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <h2 class="text-sm font-semibold text-gray-900 mb-2">예약 시작 20분 전 알림</h2>
-        <p class="text-xs text-gray-600">
-            현재 시간 기준으로, <span class="font-semibold">20분 이내에 시작하는 예약</span>이 이곳에 표시됩니다.
-            이 화면을 통해 오늘 바로 이용해야 할 공간을 빠르게 확인할 수 있습니다.
-        </p>
-    </section>
+        <h2 class="text-sm font-semibold text-gray-900 mb-2">예약 알림 방식</h2>
 
-    <!-- 알림 목록 -->
-    <section class="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div class="px-4 py-3 border-b border-gray-100 flex items-center space-x-2">
-            <i class="fa-regular fa-bell text-blue-600"></i>
-            <span class="text-sm font-semibold text-gray-900">곧 시작되는 예약</span>
-        </div>
-
-        <div class="max-h-80 overflow-y-auto">
-            <% if (upcoming == null || upcoming.isEmpty()) { %>
-                <p class="px-4 py-4 text-xs text-gray-400">
-                    현재 20분 이내에 시작되는 예약이 없습니다.
+        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+            <div>
+                <p class="text-sm text-gray-800">예약 시작 20분 전 알림</p>
+                <p class="text-[11px] text-gray-500 mt-1">
+                    모든 예약은 시작 20분 전에 &quot;알림&quot; 탭에 자동으로 표시됩니다.
                 </p>
-            <% } else { %>
-                <% for (ReservationDTO rsv : upcoming) { %>
-                    <div class="px-4 py-3 border-b border-gray-100 text-sm">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-medium"><%= rsv.getRoom_name() %></span>
-                            <span class="text-[11px] text-gray-500">
-                                <%= rsv.getReserve_date().toString() %>
-                            </span>
-                        </div>
-                        <p class="text-xs text-gray-600">
-                            예약 시간:
-                            <%= rsv.getStart_time().toString() %> ~
-                            <%= rsv.getEnd_time().toString() %>
-                        </p>
-                    </div>
-                <% } %>
-            <% } %>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-600">기본 ON</span>
         </div>
+
+        <p class="mt-3 text-[11px] text-gray-500">
+            현재 버전에서는 알림 방식이 고정되어 있으며, 예약 시작 20분 전 알림만 제공됩니다.
+            알림 내역은 하단의 <strong>알림</strong> 탭에서 확인할 수 있습니다.
+        </p>
     </section>
 
 </main>

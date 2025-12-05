@@ -1,5 +1,6 @@
 package com.club.dao;
 
+import java.time.LocalDate;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -123,4 +124,24 @@ public class PenaltyDAO {
 
         return dto;
     }
+    public void insertNoShowPenalty(int userId, LocalDate startDate, LocalDate endDate) {
+
+        String sql =
+            "INSERT INTO penalties (user_id, reason, start_date, end_date) " +
+            "VALUES (?, 'NO_SHOW', ?, ?)";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, userId);
+            pstmt.setDate(2, java.sql.Date.valueOf(startDate));
+            pstmt.setDate(3, java.sql.Date.valueOf(endDate));
+
+            pstmt.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }

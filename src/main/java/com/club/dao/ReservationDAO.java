@@ -1,16 +1,18 @@
 package com.club.dao;
 
+import com.club.dto.TimeSlotDTO;
+import com.club.dto.ReservationDTO;
+import com.club.util.DBUtil;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.club.dto.ReservationDTO;
-import com.club.util.DBUtil;
 
 /**
  * 예약 관련 DAO
@@ -24,112 +26,62 @@ public class ReservationDAO {
      * 특정 날짜 + 특정 방 목록에 대한 예약 조회
      * (타임테이블, 인기 예약 현황 등에 사용)
      */
-    public List<ReservationDTO> findByRoomsAndDate(List<Integer> roomIds, LocalDate date) {
+	// ======================= 내 예약 목록 조회 =======================
+	public List<ReservationDTO> findByUser(int userId) {
 
-        List<ReservationDTO> list = new ArrayList<>();
+	    List<ReservationDTO> list = new ArrayList<>();
 
-        if (roomIds == null || roomIds.isEmpty()) {
-            return list;
-        }
+	    String sql =
+	        "SELECT r.reservation_id, r.room_id, r.user_id, r.date, r.time, rm.name AS room_name " +
+	        "FROM reservations r " +
+	        "JOIN rooms rm ON r.room_id = rm.room_id " +
+	        "WHERE r.user_id = ? " +
+	        "ORDER BY r.date DESC, r.time DESC";
 
-        StringBuilder inClause = new StringBuilder();
-        inClause.append("(");
-        for (int i = 0; i < roomIds.size(); i++) {
-            if (i > 0) inClause.append(",");
-            inClause.append("?");
-        }
-        inClause.append(")");
+	    try (Connection conn = DBUtil.getConnection();
+	         PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        String sql =
-            "SELECT rsv.reservation_id, rsv.room_id, rsv.user_id, rsv.reserve_date, " +
-            "       rsv.start_time, rsv.end_time, rsv.status, " +
-            "       u.name AS user_name, rm.name AS room_name " +
-            "FROM reservations rsv " +
-            "JOIN users u ON rsv.user_id = u.user_id " +
-            "JOIN rooms rm ON rsv.room_id = rm.room_id " +
-            "WHERE rsv.reserve_date = ? " +
-            "  AND rsv.room_id IN " + inClause.toString() + " " +
-            "  AND rsv.status = 'RESERVED' " +
-            "ORDER BY rsv.room_id, rsv.start_time";
+	        pstmt.setInt(1, userId);
 
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            while (rs.next()) {
+	                ReservationDTO dto = new ReservationDTO();
+	                dto.setReservation_id(rs.getInt("reservation_id"));
+	                dto.setRoom_id(rs.getInt("room_id"));
+	                dto.setUser_id(rs.getInt("user_id"));
 
-            pstmt.setString(1, date.toString());
+	                // DB 컬럼 date → DTO의 reserve_date
+	                dto.setReserve_date(rs.getDate("date").toLocalDate());
 
-            int idx = 2;
-            for (Integer roomId : roomIds) {
-                pstmt.setInt(idx++, roomId);
-            }
+	                // DB 컬럼 time → start_time, end_time(+1시간) 으로 매핑
+	                LocalTime start = rs.getTime("time").toLocalTime();
+	                dto.setStart_time(start);
+	                dto.setEnd_time(start.plusHours(1));
 
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    ReservationDTO dto = new ReservationDTO();
-                    dto.setReservation_id(rs.getInt("reservation_id"));
-                    dto.setRoom_id(rs.getInt("room_id"));
-                    dto.setUser_id(rs.getInt("user_id"));
-                    dto.setReserve_date(rs.getDate("reserve_date").toLocalDate());
-                    dto.setStart_time(rs.getTime("start_time").toLocalTime());
-                    dto.setEnd_time(rs.getTime("end_time").toLocalTime());
-                    dto.setStatus(rs.getString("status"));
-                    dto.setUser_name(rs.getString("user_name"));
-                    dto.setRoom_name(rs.getString("room_name"));
-                    list.add(dto);
-                }
-            }
+	                // status 컬럼 없으면 화면용으로 RESERVED 고정
+	                dto.setStatus("RESERVED");
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	                dto.setRoom_name(rs.getString("room_name"));
 
-        return list;
-    }
+	                list.add(dto);
+	            }
+	        }
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+
+	    return list;
+	}
+
 
     /**
-     * 사용자 전체 예약 내역 조회 (마이페이지에서 사용할 수 있음)
+     * 사용자 전체 예약 내역 조회 (내 예약 화면)
      */
-    public List<ReservationDTO> findByUser(int userId) {
-
-        List<ReservationDTO> list = new ArrayList<>();
-
-        String sql =
-            "SELECT rsv.reservation_id, rsv.room_id, rsv.user_id, rsv.reserve_date, " +
-            "       rsv.start_time, rsv.end_time, rsv.status, " +
-            "       rm.name AS room_name " +
-            "FROM reservations rsv " +
-            "JOIN rooms rm ON rsv.room_id = rm.room_id " +
-            "WHERE rsv.user_id = ? " +
-            "ORDER BY rsv.reserve_date DESC, rsv.start_time DESC";
-
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, userId);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    ReservationDTO dto = new ReservationDTO();
-                    dto.setReservation_id(rs.getInt("reservation_id"));
-                    dto.setRoom_id(rs.getInt("room_id"));
-                    dto.setUser_id(rs.getInt("user_id"));
-                    dto.setReserve_date(rs.getDate("reserve_date").toLocalDate());
-                    dto.setStart_time(rs.getTime("start_time").toLocalTime());
-                    dto.setEnd_time(rs.getTime("end_time").toLocalTime());
-                    dto.setStatus(rs.getString("status"));
-                    dto.setRoom_name(rs.getString("room_name"));
-                    list.add(dto);
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return list;
-    }
+   
 
     /**
-     * 예약 생성 (시작/종료 Timestamp 기준)
+     * 예약 생성 (Timestamp 기준, 필요시 사용)
      */
     public void createReservation(int roomId, int userId, Timestamp start, Timestamp end) {
 
@@ -157,4 +109,176 @@ public class ReservationDAO {
             e.printStackTrace();
         }
     }
+
+    /**
+     * 방 + 날짜 기준 시간대 현황 (타임테이블)
+     * 09~21시 기준, 예약 있으면 BOOKED, 없으면 AVAILABLE
+     */
+    public List<TimeSlotDTO> getTimeSlotsByRoomAndDate(int roomId, LocalDate date) {
+        List<TimeSlotDTO> list = new ArrayList<>();
+
+        int startHour = 9;
+        int endHour   = 21;
+
+        String sql = "SELECT start_time FROM reservations " +
+                     "WHERE room_id = ? AND reserve_date = ? AND status = 'RESERVED'";
+
+        List<String> booked = new ArrayList<>();
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, roomId);
+            pstmt.setString(2, date.toString());
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String timeStr = rs.getTime("start_time").toLocalTime().toString(); // HH:MM:ss
+                    booked.add(timeStr.substring(0,5)); // HH:MM
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        for (int h = startHour; h <= endHour; h++) {
+            String t = String.format("%02d:00", h);
+            String status = booked.contains(t) ? "BOOKED" : "AVAILABLE";
+            list.add(new TimeSlotDTO(t, status));
+        }
+
+        return list;
+    }
+
+    // === 중복 예약 체크 후 예약 생성 ===
+    // 예약 가능하면 true, 겹치면 false 리턴
+    public boolean createReservationChecked(int userId,
+                                            int roomId,
+                                            LocalDate date,
+                                            LocalTime startTime,
+                                            LocalTime endTime) {
+
+        // 1. 겹치는 예약 있는지 확인
+        String checkSql = "SELECT COUNT(*) AS cnt " +
+                          "FROM reservations " +
+                          "WHERE room_id = ? AND reserve_date = ? " +
+                          "AND NOT (end_time <= ? OR start_time >= ?) " +
+                          "AND status = 'RESERVED'";
+
+        // 2. 실제 예약 INSERT
+        String insertSql = "INSERT INTO reservations " +
+                           " (user_id, room_id, reserve_date, start_time, end_time, status) " +
+                           "VALUES (?, ?, ?, ?, ?, 'RESERVED')";
+
+        try (Connection conn = DBUtil.getConnection()) {
+
+            // 겹침 체크
+            try (PreparedStatement pstmt = conn.prepareStatement(checkSql)) {
+                pstmt.setInt(1, roomId);
+                pstmt.setString(2, date.toString());
+                pstmt.setTime(3, Time.valueOf(startTime));
+                pstmt.setTime(4, Time.valueOf(endTime));
+
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        int cnt = rs.getInt("cnt");
+                        if (cnt > 0) {
+                            return false;   // 이미 겹치는 예약 있음
+                        }
+                    }
+                }
+            }
+
+            // 예약 INSERT
+            try (PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
+                pstmt.setInt(1, userId);
+                pstmt.setInt(2, roomId);
+                pstmt.setDate(3, java.sql.Date.valueOf(date));
+                pstmt.setTime(4, Time.valueOf(startTime));
+                pstmt.setTime(5, Time.valueOf(endTime));
+
+                int result = pstmt.executeUpdate();
+                return result > 0;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 예약 취소 (status 컬럼 사용 버전)
+     */
+    public boolean cancelReservation(int reservationId, int userId) {
+
+        String sql = "UPDATE reservations " +
+                     "SET status = 'CANCELED' " +
+                     "WHERE reservation_id = ? AND user_id = ?";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, reservationId);
+            pstmt.setInt(2, userId);
+
+            int result = pstmt.executeUpdate();
+            return result > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    public List<ReservationDTO> findByRoomsAndDate(List<Integer> roomIds, LocalDate date) {
+
+        List<ReservationDTO> list = new ArrayList<>();
+
+        if (roomIds == null || roomIds.isEmpty()) {
+            return list;
+        }
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT r.reservation_id, r.room_id, r.user_id, r.date, r.time ")
+           .append("FROM reservations r ")
+           .append("WHERE r.date = ? AND r.room_id IN (");
+
+        for (int i = 0; i < roomIds.size(); i++) {
+            sql.append("?");
+            if (i < roomIds.size() - 1) sql.append(",");
+        }
+        sql.append(")");
+
+        try (
+            Connection conn = DBUtil.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql.toString());
+        ) {
+            pstmt.setDate(1, java.sql.Date.valueOf(date));
+
+            for (int i = 0; i < roomIds.size(); i++) {
+                pstmt.setInt(i + 2, roomIds.get(i));
+            }
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    ReservationDTO dto = new ReservationDTO();
+                    dto.setReservation_id(rs.getInt("reservation_id"));
+                    dto.setRoom_id(rs.getInt("room_id"));
+                    dto.setUser_id(rs.getInt("user_id"));
+                    dto.setDate(rs.getDate("date"));      // ✅ 수정
+                    dto.setTime(rs.getTime("time"));      // ✅ 수정
+
+                    list.add(dto);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+
 }
